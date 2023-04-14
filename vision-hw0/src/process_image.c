@@ -42,10 +42,10 @@ image rgb_to_grayscale(image im) {
     // luma
     for (int j = 0; j < im.h; ++j) {
         for (int i = 0; i < im.w; ++i) {
-            r = im.data[index_pixel(im, i, j, 0)];
-            g = im.data[index_pixel(im, i, j, 1)];
-            b = im.data[index_pixel(im, i, j, 2)];
-            gray.data[i + im.w * j] = 0.299 * r + 0.587 * g + 0.114 * b;
+            r = get_pixel(im, i, j, 0);
+            g = get_pixel(im, i, j, 1);
+            b = get_pixel(im, i, j, 2);
+            set_pixel(gray, i, j, 0, 0.299 * r + 0.587 * g + 0.114 * b);
         }
     }
     return gray;
@@ -54,7 +54,7 @@ image rgb_to_grayscale(image im) {
 void shift_image(image im, int c, float v) {
     for (int j = 0; j < im.h; ++j) {
         for (int i = 0; i < im.w; ++i) {
-            im.data[index_pixel(im, i, j, c)] += v;
+            set_pixel(im, i, j, c, get_pixel(im, i, j, c) + v);
         }
     }
 }
@@ -79,9 +79,70 @@ float three_way_min(float a, float b, float c) {
 }
 
 void rgb_to_hsv(image im) {
-    // TODO Fill this in
+    float h, s, v, r, g, b, c;
+
+    for (int j = 0; j < im.h; ++j) {
+        for (int i = 0; i < im.w; ++i) {
+            r = get_pixel(im, i, j, 0);
+            g = get_pixel(im, i, j, 1);
+            b = get_pixel(im, i, j, 2);
+
+            v = three_way_max(r, g, b);
+            c = v - three_way_min(r, g, b);
+            s = (v != 0) ? (c / v) : 0;
+
+            if (v == r) {
+                h = (g - b) / (c);
+            } else if (v == g) {
+                h = (b - r) / (c) + 2;
+            } else if (v == b) {
+                h = (r - g) / (c) + 4;
+            }
+            h = (h < 0) ? h / 6 + 1 : h / 6;
+
+            set_pixel(im, i, j, 0, h);
+            set_pixel(im, i, j, 1, s);
+            set_pixel(im, i, j, 2, v);
+        }
+    }
 }
 
 void hsv_to_rgb(image im) {
-    // TODO Fill this in
+    float h, s, v, c, x;
+    float r, g, b = 0.0f;
+
+    for (int j = 0; j < im.h; ++j) {
+        for (int i = 0; i < im.w; ++i) {
+            h = get_pixel(im, i, j, 0) * 6;
+            s = get_pixel(im, i, j, 1);
+            v = get_pixel(im, i, j, 2);
+
+            c = v * s;
+            x = c * (1 - fabsf(fmodf(h, 2) - 1));
+
+            if (h < 1) {
+                r = c;
+                g = x;
+            } else if (h < 2) {
+                r = x;
+                g = c;
+            } else if (h < 3) {
+                g = c;
+                b = x;
+            } else if (h < 4) {
+                g = x;
+                b = c;
+            } else if (h < 5) {
+                r = x;
+                b = c;
+            } else if (h < 6) {
+                r = c;
+                b = x;
+            }
+
+            set_pixel(im, i, j, 0, r + v - c);
+            set_pixel(im, i, j, 1, g + v - c);
+            set_pixel(im, i, j, 2, b + v - c);
+        }
+    }
 }

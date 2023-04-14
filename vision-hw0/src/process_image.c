@@ -5,6 +5,7 @@
 
 #include "image.h"
 
+float TOLERANCE = 0.0001f;
 int clamp_padding(int boundary, int x) {
     return (x >= boundary) ? (boundary - 1) : ((x < 0) ? 0 : x);
 }
@@ -22,8 +23,9 @@ float get_pixel(image im, int x, int y, int c) {
 }
 
 void set_pixel(image im, int x, int y, int c, float v) {
-    if (x < 0 || y < 0 || c < 0 || x >= im.w || y >= im.h || c >= im.c)
-        return;
+    x = clamp_padding(im.w, x);
+    y = clamp_padding(im.h, y);
+    c = clamp_padding(im.c, c);
 
     im.data[index_pixel(im, x, y, c)] = v;
 }
@@ -55,6 +57,14 @@ void shift_image(image im, int c, float v) {
     for (int j = 0; j < im.h; ++j) {
         for (int i = 0; i < im.w; ++i) {
             set_pixel(im, i, j, c, get_pixel(im, i, j, c) + v);
+        }
+    }
+}
+
+void scale_image(image im, int c, float v) {
+    for (int j = 0; j < im.h; ++j) {
+        for (int i = 0; i < im.w; ++i) {
+            set_pixel(im, i, j, c, get_pixel(im, i, j, c) * v);
         }
     }
 }
@@ -91,14 +101,14 @@ void rgb_to_hsv(image im) {
             c = v - three_way_min(r, g, b);
             s = (v != 0) ? (c / v) : 0;
 
-            if (v == r) {
+            if (fabsf(v - r) < TOLERANCE) {
                 h = (g - b) / (c);
-            } else if (v == g) {
+            } else if (fabsf(v - g) < TOLERANCE) {
                 h = (b - r) / (c) + 2;
-            } else if (v == b) {
+            } else if (fabsf(v - b) < TOLERANCE) {
                 h = (r - g) / (c) + 4;
             }
-            h = (h < 0) ? h / 6 + 1 : h / 6;
+            h = (h < 0) ? (h / 6 + 1) : (h / 6);
 
             set_pixel(im, i, j, 0, h);
             set_pixel(im, i, j, 1, s);

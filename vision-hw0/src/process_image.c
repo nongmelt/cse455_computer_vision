@@ -35,7 +35,17 @@ image copy_image(image im) {
 image rgb_to_grayscale(image im) {
     assert(im.c == 3);
     image gray = make_image(im.w, im.h, 1);
-    // TODO Fill this in
+    float r, g, b;
+
+    // luma
+    for (int j = 0; j < im.h; ++j) {
+        for (int i = 0; i < im.w; ++i) {
+            r = im.data[i + im.w * j + im.w * im.h * 0];
+            g = im.data[i + im.w * j + im.w * im.h * 1];
+            b = im.data[i + im.w * j + im.w * im.h * 2];
+            gray.data[i + im.w * j] = 0.299 * r + 0.587 * g + 0.114 * b;
+        }
+    }
     return gray;
 }
 

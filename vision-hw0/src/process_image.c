@@ -101,14 +101,19 @@ void rgb_to_hsv(image im) {
             c = v - three_way_min(r, g, b);
             s = (v != 0) ? (c / v) : 0;
 
-            if (fabsf(v - r) < TOLERANCE) {
-                h = (g - b) / (c);
-            } else if (fabsf(v - g) < TOLERANCE) {
-                h = (b - r) / (c) + 2;
-            } else if (fabsf(v - b) < TOLERANCE) {
-                h = (r - g) / (c) + 4;
+            if (c != 0.0f) {
+                if (fabsf(v - r) < TOLERANCE) {
+                    h = (g - b) / (c);
+                } else if (fabsf(v - g) < TOLERANCE) {
+                    h = (b - r) / (c) + 2;
+                } else if (fabsf(v - b) < TOLERANCE) {
+                    h = (r - g) / (c) + 4;
+                }
+                h = (h < 0) ? (h / 6 + 1) : (h / 6);
+            } else {
+                s = 0;
+                h = 0;
             }
-            h = (h < 0) ? (h / 6 + 1) : (h / 6);
 
             set_pixel(im, i, j, 0, h);
             set_pixel(im, i, j, 1, s);
@@ -118,9 +123,7 @@ void rgb_to_hsv(image im) {
 }
 
 void hsv_to_rgb(image im) {
-    float h, s, v, c, x;
-    float r, g, b = 0.0f;
-
+    float h, s, v, c, m, x;
     for (int j = 0; j < im.h; ++j) {
         for (int i = 0; i < im.w; ++i) {
             h = get_pixel(im, i, j, 0) * 6;
@@ -128,8 +131,10 @@ void hsv_to_rgb(image im) {
             v = get_pixel(im, i, j, 2);
 
             c = v * s;
-            x = c * (1 - fabsf(fmodf(h, 2) - 1));
+            m = v - c;
+            x = c * (1 - fabs(fmod(h, 2) - 1));
 
+            float r = 0, g = 0, b = 0;
             if (h < 1) {
                 r = c;
                 g = x;
@@ -150,9 +155,9 @@ void hsv_to_rgb(image im) {
                 b = x;
             }
 
-            set_pixel(im, i, j, 0, r + v - c);
-            set_pixel(im, i, j, 1, g + v - c);
-            set_pixel(im, i, j, 2, b + v - c);
+            set_pixel(im, i, j, 0, r + m);
+            set_pixel(im, i, j, 1, g + m);
+            set_pixel(im, i, j, 2, b + m);
         }
     }
 }
